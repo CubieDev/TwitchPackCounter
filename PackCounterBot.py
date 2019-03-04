@@ -134,3 +134,7 @@ class PackCounter:
 
 if __name__ == "__main__":
     PackCounter()
+
+# TODO:
+# Replace dict for sub gifts by sqlite3 database
+# Add !clear command for when packs have been opened
