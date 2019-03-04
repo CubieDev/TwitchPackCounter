@@ -70,7 +70,7 @@ class PackCounter:
         self.chan = None
         self.nick = None
         self.auth = None
-        self.gifts = {'ButtonsDuckman': 1.0, 'TEditsV1': 1.0}
+        self.gifts = {}
         
         # Fill previously initialised variables with data from the settings.txt file
         Settings(self)
@@ -99,8 +99,7 @@ class PackCounter:
                     self.gifts[m.tags["display-name"]] += int(m.tags["msg-param-sub-plan"]) / 1000
                 else:
                     self.gifts[m.tags["display-name"]] = int(m.tags["msg-param-sub-plan"]) / 1000
-                from pprint import pprint
-                pprint(self.gifts)
+                print(self.gifts)
 
                 # For testing purposes also add it to a database
                 self.add_message_to_db(m)
@@ -135,6 +134,3 @@ class PackCounter:
 
 if __name__ == "__main__":
     PackCounter()
-
-#if m.type not in ["PRIVMSG", "MODE", "CAP * ACK", "353", "PART", "JOIN", "366", "CLEARCHAT", "CLEARMSG", "001", "002", "003", "004", "375", "376", "372"]:
-#    print(m)
