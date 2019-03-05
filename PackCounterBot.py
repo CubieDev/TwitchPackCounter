@@ -106,6 +106,7 @@ class PackCounter:
 
             elif m.tags["msg-id"] not in ["sub", "resub", "raid", "ritual", "submysterygift", "anongiftpaidupgrade", "giftpaidupgrade"]:
                 print(m)
+                # For testing purposes also add it to a database
                 self.add_message_to_db(m)
         
         elif m.type == "PRIVMSG":
