@@ -84,15 +84,21 @@ class PackCounter:
         self.auth = None
         self.allowed_user = None
         self.clear_ranks = None
+        live = False
 
         # Fill previously initialised variables with data from the settings.txt file
         Settings(self)
 
         self.db = Database()
 
-        self.ws = TwitchWebsocket(self.host, self.port, self.message_handler, live=True)
+        self.ws = TwitchWebsocket(self.host, self.port, self.message_handler, live=live)
         self.ws.login(self.nick, self.auth)
-        self.ws.join_channel(self.chan)
+        # Make sure we're not live, as we cant send a message to multiple servers
+        if type(self.chan) == list and not live:
+            for chan in self.chan:
+                self.ws.join_channel(chan)
+        else:
+            self.ws.join_channel(self.chan)
         self.ws.add_capability(["tags", "commands"])
 
     def setSettings(self, host, port, chan, nick, auth, allowed_user, clear_ranks):
@@ -160,7 +166,7 @@ class PackCounter:
         # Add values to the database
         self.db.add_item(m.tags["display-name"], 
                          m.tags["msg-param-recipient-display-name"], 
-                         m.tags["msg-param-sub-plan"] / 1000,
+                         int(m.tags["msg-param-sub-plan"]) / 1000,
                          m.tags["tmi-sent-ts"])
     
     def is_user_allowed(self, m):
