@@ -3,7 +3,8 @@ from TwitchWebsocket import TwitchWebsocket
 import random, time, json, sqlite3, logging, os
 
 def set_logging():
-    prefix = "..\\Logging\\"
+    prefix = "/".join(os.path.dirname(os.path.realpath(__file__)).split("/")[:-1]) or "\\".join(os.path.dirname(os.path.realpath(__file__)).split("\\")[:-1]) 
+    prefix += "/Logging/"
     try:
         os.mkdir(prefix)
     except FileExistsError:
@@ -15,6 +16,8 @@ def set_logging():
         format="[%(asctime)s - %(levelname)s]\t %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
+    # Spacer
+    logging.info("")
 
 class Settings:
     def __init__(self, bot):
