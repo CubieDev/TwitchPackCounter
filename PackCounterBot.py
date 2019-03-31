@@ -1,9 +1,24 @@
 
 from TwitchWebsocket import TwitchWebsocket
-import random, time, json, sqlite3
+import random, time, json, sqlite3, logging, os
+
+def set_logging():
+    prefix = "..\\Logging\\"
+    try:
+        os.mkdir(prefix)
+    except FileExistsError:
+        pass
+    log_file = prefix + os.path.basename(__file__).split('.')[0] + ".txt"
+    logging.basicConfig(
+        filename=log_file,
+        level=logging.DEBUG,
+        format="[%(asctime)s - %(levelname)s]\t %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
 
 class Settings:
     def __init__(self, bot):
+        logging.debug("Loading settings.txt file...")
         try:
             # Try to load the file using json.
             # And pass the data to the GoogleTranslate class instance if this succeeds.
@@ -17,11 +32,14 @@ class Settings:
                                 data['Authentication'],
                                 data["ClearAllowedUsers"],
                                 data["ClearAllowedRanks"])
+                logging.debug("Settings loaded into Bot.")
         except ValueError:
+            logging.error("Error in settings file.")
             raise ValueError("Error in settings file.")
         except FileNotFoundError:
             # If the file is missing, create a standardised settings.txt file
             # With all parameters required.
+            logging.error("Please fix your settings.txt file that was just generated.")
             with open('settings.txt', 'w') as f:
                 standard_dict = {
                                     "Host": "irc.chat.twitch.tv",
@@ -45,11 +63,13 @@ class Database:
         CREATE TABLE IF NOT EXISTS PackCounter (
             gifter TEXT,
             recipient TEXT,
-            subs INTEGER,
+            tier INTEGER,
             time INTEGER
         )
         """
+        logging.debug("Creating Database...")
         self.execute(sql)
+        logging.debug("Database created.")
 
     def execute(self, sql, values=None, fetch=False):
         with sqlite3.connect("PackCounter.db") as conn:
@@ -63,13 +83,14 @@ class Database:
                 return cur.fetchall()
     
     def add_item(self, *args):
-        self.execute("INSERT INTO PackCounter(tags) VALUES (?, ?, ?, ?, ?)", args)
+        logging.info(f"{args[0]} gifted {args[1]} a tier {args[2]} sub at t = {args[3]}")
+        self.execute("INSERT INTO PackCounter(gifter, recipient, tier, time) VALUES (?, ?, ?, ?)", args)
     
     def get_total(self):
-        return self.execute("SELECT SUM(subs) FROM PackCounter", fetch=True)[0][0]
+        return self.execute("SELECT SUM(tier) FROM PackCounter", fetch=True)[0][0]
     
     def get_grouped_total(self):
-        return self.execute("SELECT gifter, SUM(subs) FROM PackCounter GROUP BY gifter", fetch=False)
+        return self.execute("SELECT gifter, SUM(tier) FROM PackCounter GROUP BY gifter", fetch=False)
 
     def clear(self):
         # Deletes all items
@@ -93,6 +114,7 @@ class PackCounter:
 
         self.ws = TwitchWebsocket(self.host, self.port, self.message_handler, live=live)
         self.ws.login(self.nick, self.auth)
+
         # Make sure we're not live, as we cant send a message to multiple servers
         if type(self.chan) == list and not live:
             for chan in self.chan:
@@ -111,27 +133,33 @@ class PackCounter:
         self.clear_ranks = clear_ranks
 
     def message_handler(self, m):
-        if m.type == "366":
-            print(f"Successfully joined channel: #{m.channel}")
+        try:
+            if m.type == "366":
+                logging.info(f"Successfully joined channel: #{m.channel}")
 
-        elif m.type == "USERNOTICE":
-            # If message is of an (anon)subgift, add the tier of it to a counter.
-            if m.tags["msg-id"] in ["subgift", "anonsubgift"]:
-                self.add_to_counter(m)
-                print(m.tags["system-msg"].replace("\\s", " "))
-       
-        elif m.type == "PRIVMSG":
-            if m.message.startswith(("!packs", "!packcounter")):
-                self.send_pack_counter()
+            elif m.type == "NOTICE":
+                logging.info(m.message)
 
-            elif m.message.startswith(("!details", "!packdetails", "!packgifters", "!gifters")):
-                self.send_pack_details()
+            elif m.type == "USERNOTICE":
+                # If message is of an (anon)subgift, add the tier of it to a counter.
+                if m.tags["msg-id"] in ["subgift", "anonsubgift"]:
+                    self.add_to_counter(m)
+                    #print(m.tags["system-msg"].replace("\\s", " "))
+        
+            elif m.type == "PRIVMSG":
+                if m.message.startswith(("!packs", "!packcounter")):
+                    self.send_pack_counter()
 
-            elif m.message.startswith(("!clear", "!packclear", "!clearpack")) and self.is_user_allowed(m):
-                # Send the pack counter beforehand just in case
-                self.send_pack_counter(clear=True)
+                elif m.message.startswith(("!details", "!packdetails", "!packgifters", "!gifters")):
+                    self.send_pack_details()
 
-                self.db.clear()
+                elif m.message.startswith(("!clear", "!packclear", "!clearpack")) and self.is_user_allowed(m):
+                    # Send the pack counter beforehand just in case
+                    self.send_pack_counter(clear=True)
+
+                    self.db.clear()
+        except Exception as e:
+            logging.exception(e)
 
     def send_pack_counter(self, clear=False):
         # Get total amount of gift subscriptions
@@ -146,7 +174,7 @@ class PackCounter:
 
         # Send to twitch chat
         out = f"Pack Counter{' before clearing' if clear else ''}: {packs:.0f}"
-        print(out)
+        logging.info(out)
         self.ws.send_message(out)
 
     def send_pack_details(self):
@@ -159,7 +187,7 @@ class PackCounter:
             out = "No recent sub gifts recorded."
         
         # Send to twitch chat
-        print(out)
+        logging.info(out)
         self.ws.send_message(out)
 
     def add_to_counter(self, m):
@@ -178,4 +206,5 @@ class PackCounter:
         return m.user in self.allowed_user
 
 if __name__ == "__main__":
+    set_logging()
     PackCounter()
