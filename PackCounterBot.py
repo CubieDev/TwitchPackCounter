@@ -13,7 +13,7 @@ def set_logging():
     logging.basicConfig(
         filename=log_file,
         level=logging.DEBUG,
-        format="[%(asctime)s - %(levelname)s]\t %(message)s",
+        format="%(asctime)s | %(levelname)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
     # Spacer
