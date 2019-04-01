@@ -3,7 +3,8 @@ from TwitchWebsocket import TwitchWebsocket
 import random, time, json, sqlite3, logging, os
 
 def set_logging():
-    prefix = "/".join(os.path.dirname(os.path.realpath(__file__)).split("/")[:-1]) or "\\".join(os.path.dirname(os.path.realpath(__file__)).split("\\")[:-1]) 
+    # Either of the two will be empty depending on OS
+    prefix = "/".join(os.path.dirname(os.path.realpath(__file__)).split("/")[:-1]) + "\\".join(os.path.dirname(os.path.realpath(__file__)).split("\\")[:-1]) 
     prefix += "/Logging/"
     try:
         os.mkdir(prefix)
@@ -86,14 +87,20 @@ class Database:
                 return cur.fetchall()
     
     def add_item(self, *args):
-        logging.info(f"{args[0]} gifted {args[1]} a tier {args[2]} sub at t = {args[3]}")
+        try:
+            logging.info(f"{args[0]} gifted {args[1]} a tier {args[2]}")
+        except UnicodeEncodeError:
+            try:
+                logging.info(f"{args[0]} gifted ... a tier {args[2]}")
+            except UnicodeEncodeError:
+                logging.info(f"... gifted {args[1]} a tier {args[2]}")
         self.execute("INSERT INTO PackCounter(gifter, recipient, tier, time) VALUES (?, ?, ?, ?)", args)
     
     def get_total(self):
-        return self.execute("SELECT SUM(tier) FROM PackCounter", fetch=True)[0][0]
+        return self.execute("SELECT SUM(tier) FROM PackCounter;", fetch=True)[0][0]
     
     def get_grouped_total(self):
-        return self.execute("SELECT gifter, SUM(tier) FROM PackCounter GROUP BY gifter", fetch=False)
+        return self.execute("SELECT gifter, SUM(tier) FROM PackCounter GROUP BY gifter;", fetch=True)
 
     def clear(self):
         # Deletes all items
@@ -108,7 +115,7 @@ class PackCounter:
         self.auth = None
         self.allowed_user = None
         self.clear_ranks = None
-        live = False
+        live = True
 
         # Fill previously initialised variables with data from the settings.txt file
         Settings(self)
@@ -161,8 +168,11 @@ class PackCounter:
                     self.send_pack_counter(clear=True)
 
                     self.db.clear()
+
+                elif m.message.startswith(("!help", "!packshelp", "!packshelp")):
+                    self.ws.send_message("This bot tracks gift subs. Commands: !packs/!packcounter (get the counter), !gifters/!packgifters (get each gifter's individual gift count), !clear (clear out counter, mod+)")
         except Exception as e:
-            logging.exception(e)
+            logging.error(e)
 
     def send_pack_counter(self, clear=False):
         # Get total amount of gift subscriptions
@@ -210,4 +220,7 @@ class PackCounter:
 
 if __name__ == "__main__":
     set_logging()
-    PackCounter()
+    try:
+        PackCounter()
+    except Exception as e:
+        logging.error(e)
