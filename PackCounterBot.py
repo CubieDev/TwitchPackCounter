@@ -2,23 +2,24 @@
 from TwitchWebsocket import TwitchWebsocket
 import random, time, json, sqlite3, logging, os
 
-def set_logging():
-    # Either of the two will be empty depending on OS
-    prefix = "/".join(os.path.dirname(os.path.realpath(__file__)).split("/")[:-1]) + "\\".join(os.path.dirname(os.path.realpath(__file__)).split("\\")[:-1]) 
-    prefix += "/Logging/"
-    try:
-        os.mkdir(prefix)
-    except FileExistsError:
-        pass
-    log_file = prefix + os.path.basename(__file__).split('.')[0] + ".txt"
-    logging.basicConfig(
-        filename=log_file,
-        level=logging.DEBUG,
-        format="%(asctime)s | %(levelname)s | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
-    )
-    # Spacer
-    logging.info("")
+class Logging:
+    def __init__(self):
+        # Either of the two will be empty depending on OS
+        prefix = "/".join(os.path.dirname(os.path.realpath(__file__)).split("/")[:-1]) + "\\".join(os.path.dirname(os.path.realpath(__file__)).split("\\")[:-1]) 
+        prefix += "/Logging/"
+        try:
+            os.mkdir(prefix)
+        except FileExistsError:
+            pass
+        log_file = prefix + os.path.basename(__file__).split('.')[0] + ".txt"
+        logging.basicConfig(
+            filename=log_file,
+            level=logging.DEBUG,
+            format="%(asctime)s | %(levelname)s | %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S"
+        )
+        # Spacer
+        logging.info("")
 
 class Settings:
     def __init__(self, bot):
@@ -55,7 +56,7 @@ class Settings:
                                     "ClearAllowedRanks": ["moderator", "broadcaster"]
                                 }
                 f.write(json.dumps(standard_dict, indent=4, separators=(',', ': ')))
-                raise ValueError("Please fix your settings.txt file that was just generated.")
+            raise ValueError("Please fix your settings.txt file that was just generated.")
 
 class Database:
     # Using sqlite for simplicity, even though it doesn't store my dict in a convenient matter.
@@ -219,7 +220,7 @@ class PackCounter:
         return m.user in self.allowed_user
 
 if __name__ == "__main__":
-    set_logging()
+    Logging()
     try:
         PackCounter()
     except Exception as e:
