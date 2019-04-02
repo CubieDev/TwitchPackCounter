@@ -48,4 +48,5 @@ I got my real OAuth token from https://twitchapps.com/tmi/.
 * [TwitchGoogleTranslate](https://github.com/CubieDev/TwitchGoogleTranslate)
 * [TwitchCubieBot](https://github.com/CubieDev/TwitchCubieBot)
 * [TwitchPickUser](https://github.com/CubieDev/TwitchPickUser)
+* [TwitchSaveMessages](https://github.com/CubieDev/TwitchSaveMessages)
 * [TwitchDialCheck](https://github.com/CubieDev/TwitchDialCheck) (Streamer specific bot)
