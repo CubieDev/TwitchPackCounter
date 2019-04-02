@@ -5,6 +5,8 @@ Twitch Bot to keep track of gift subscriptions
 # Note
 This Bot was written for one streamer in particular, which means this script likely will not be useful to anyone else, but people interested in checking out how I use my [TwitchWebsocket](https://github.com/CubieDev/TwitchWebsocket) library.
 
+Note also that this bot creates a folder called "Logging" parallel to the folder this script exists in, where the logging information of this script is stored. This is perhaps not ideal for most users, but works well in my case, as it allows all of my bot's logs to be stored in one location, where I can easily access them.
+
 ---
 # Functionality
 This Bot will return the amount of gifted subscriptions divided by 5, rounded down, upon using the command "!packs".
