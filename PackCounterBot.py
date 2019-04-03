@@ -101,7 +101,7 @@ class Database:
         return self.execute("SELECT SUM(tier) FROM PackCounter;", fetch=True)[0][0]
     
     def get_grouped_total(self):
-        return self.execute("SELECT gifter, SUM(tier) FROM PackCounter GROUP BY gifter;", fetch=True)
+        return self.execute("SELECT gifter, SUM(tier) FROM PackCounter GROUP BY gifter ORDER BY 2 DESC;", fetch=True)
 
     def clear(self):
         # Deletes all items
