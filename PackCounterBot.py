@@ -131,6 +131,7 @@ class PackCounter:
                                   callback=self.message_handler,
                                   capability=["tags", "commands"],
                                   live=live)
+        self.ws.start_bot()
 
     def setSettings(self, host, port, chan, nick, auth, allowed_user, clear_ranks):
         self.host = host
