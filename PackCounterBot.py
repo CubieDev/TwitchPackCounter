@@ -123,16 +123,14 @@ class PackCounter:
 
         self.db = Database()
 
-        self.ws = TwitchWebsocket(self.host, self.port, self.message_handler, live=live)
-        self.ws.login(self.nick, self.auth)
-
-        # Make sure we're not live, as we cant send a message to multiple servers
-        if type(self.chan) == list and not live:
-            for chan in self.chan:
-                self.ws.join_channel(chan)
-        else:
-            self.ws.join_channel(self.chan)
-        self.ws.add_capability(["tags", "commands"])
+        self.ws = TwitchWebsocket(host=self.host, 
+                                  port=self.port,
+                                  chan=self.chan,
+                                  nick=self.nick,
+                                  auth=self.auth,
+                                  callback=self.message_handler,
+                                  capability=["tags", "commands"],
+                                  live=live)
 
     def setSettings(self, host, port, chan, nick, auth, allowed_user, clear_ranks):
         self.host = host
