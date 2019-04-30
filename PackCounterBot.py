@@ -2,110 +2,11 @@
 from TwitchWebsocket import TwitchWebsocket
 import random, time, json, sqlite3, logging, os
 
-class Logging:
-    def __init__(self):
-        # Either of the two will be empty depending on OS
-        prefix = "/".join(os.path.dirname(os.path.realpath(__file__)).split("/")[:-1]) + "\\".join(os.path.dirname(os.path.realpath(__file__)).split("\\")[:-1]) 
-        prefix += "/Logging/"
-        try:
-            os.mkdir(prefix)
-        except FileExistsError:
-            pass
-        log_file = prefix + os.path.basename(__file__).split('.')[0] + ".txt"
-        logging.basicConfig(
-            filename=log_file,
-            level=logging.DEBUG,
-            format="%(asctime)s | %(levelname)s | %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S"
-        )
-        # Spacer
-        logging.info("")
+from Log import Log
+Log(__file__)
 
-class Settings:
-    def __init__(self, bot):
-        logging.debug("Loading settings.txt file...")
-        try:
-            # Try to load the file using json.
-            # And pass the data to the GoogleTranslate class instance if this succeeds.
-            with open("settings.txt", "r") as f:
-                settings = f.read()
-                data = json.loads(settings)
-                bot.setSettings(data['Host'],
-                                data['Port'],
-                                data['Channel'],
-                                data['Nickname'],
-                                data['Authentication'],
-                                data["ClearAllowedUsers"],
-                                data["ClearAllowedRanks"])
-                logging.debug("Settings loaded into Bot.")
-        except ValueError:
-            logging.error("Error in settings file.")
-            raise ValueError("Error in settings file.")
-        except FileNotFoundError:
-            # If the file is missing, create a standardised settings.txt file
-            # With all parameters required.
-            logging.error("Please fix your settings.txt file that was just generated.")
-            with open('settings.txt', 'w') as f:
-                standard_dict = {
-                                    "Host": "irc.chat.twitch.tv",
-                                    "Port": 6667,
-                                    "Channel": "#<channel>",
-                                    "Nickname": "<name>",
-                                    "Authentication": "oauth:<auth>",
-                                    "ClearAllowedUsers": [],
-                                    "ClearAllowedRanks": ["moderator", "broadcaster"]
-                                }
-                f.write(json.dumps(standard_dict, indent=4, separators=(',', ': ')))
-            raise ValueError("Please fix your settings.txt file that was just generated.")
-
-class Database:
-    # Using sqlite for simplicity, even though it doesn't store my dict in a convenient matter.
-    def __init__(self):
-        self.create_db()
-    
-    def create_db(self):
-        sql = """
-        CREATE TABLE IF NOT EXISTS PackCounter (
-            gifter TEXT,
-            recipient TEXT,
-            tier INTEGER,
-            time INTEGER
-        )
-        """
-        logging.debug("Creating Database...")
-        self.execute(sql)
-        logging.debug("Database created.")
-
-    def execute(self, sql, values=None, fetch=False):
-        with sqlite3.connect("PackCounter.db") as conn:
-            cur = conn.cursor()
-            if values is None:
-                cur.execute(sql)
-            else:
-                cur.execute(sql, values)
-            conn.commit()
-            if fetch:
-                return cur.fetchall()
-    
-    def add_item(self, *args):
-        try:
-            logging.info(f"{args[0]} gifted {args[1]} a tier {args[2]}")
-        except UnicodeEncodeError:
-            try:
-                logging.info(f"{args[0]} gifted ... a tier {args[2]}")
-            except UnicodeEncodeError:
-                logging.info(f"... gifted {args[1]} a tier {args[2]}")
-        self.execute("INSERT INTO PackCounter(gifter, recipient, tier, time) VALUES (?, ?, ?, ?)", args)
-    
-    def get_total(self):
-        return self.execute("SELECT SUM(tier) FROM PackCounter;", fetch=True)[0][0]
-    
-    def get_grouped_total(self):
-        return self.execute("SELECT gifter, SUM(tier) FROM PackCounter GROUP BY gifter ORDER BY 2 DESC;", fetch=True)
-
-    def clear(self):
-        # Deletes all items
-        self.execute("DELETE FROM PackCounter")
+from Settings import Settings
+from Database import Database
 
 class PackCounter:
     def __init__(self):
@@ -219,8 +120,4 @@ class PackCounter:
         return m.user in self.allowed_user
 
 if __name__ == "__main__":
-    Logging()
-    try:
-        PackCounter()
-    except Exception as e:
-        logging.error(e)
+    PackCounter()
