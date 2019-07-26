@@ -41,6 +41,16 @@ I got my real OAuth token from https://twitchapps.com/tmi/.
 
 ---
 
+# Requirements
+* [Python 3.6+](https://www.python.org/downloads/)
+* [Module requirements](requirements.txt)<br>
+Install these modules using `pip install -r requirements.txt`
+
+Among these modules is my own [TwitchWebsocket](https://github.com/CubieDev/TwitchWebsocket) wrapper, which makes making a Twitch chat bot a lot easier.
+This repository can be seen as an implementation using this wrapper.
+
+---
+
 # Other Twitch Bots
 
 * [TwitchGoogleTranslate](https://github.com/CubieDev/TwitchGoogleTranslate)
