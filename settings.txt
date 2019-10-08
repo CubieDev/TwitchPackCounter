@@ -4,4 +4,6 @@
     "Channel": "#<channel>",
     "Nickname": "<name>",
     "Authentication": "oauth:<auth>",
+    "ClearAllowedUsers": [],
+    "ClearAllowedRanks": ["moderator", "broadcaster"]
 }
